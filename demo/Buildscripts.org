@@ -1,0 +1,357 @@
+
+* LICENSE
+
+dot-usr:demo/Buildscript.org - a demo build script collection,
+                               demonstrates how to use org babel for
+                               building
+
+Copyright (C) 2013 M E Leypold
+
+This program is free software: you can redistribute it and/or modify it under the terms of
+the GNU General Public License as published by the Free Software Foundation, either
+version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program.
+If not, see <http://www.gnu.org/licenses/>.
+
+* Another Attempt at Building Software from Org-Mode Source Blocks
+
+*** Das Demo-Script
+    :PROPERTIES:
+    :END:
+
+    #+begin_src sh :noweb yes :results verbatim :tangle gnu-hello.sh :shebang #!/bin/bash
+      
+      {{package}}     gnu-hello 2.6.90 1
+      
+      {{download}}    ftp://alpha.gnu.org/gnu/hello/hello-2.6.90.tar.gz \
+                      62b25cedcaabb8902bf945228be3bd4e
+          
+      {{download}}    ftp://alpha.gnu.org/gnu/hello/hello-2.1.90.tar.gz \
+                      f4fcf11dbee6a8286fb337c25694ce8e
+      
+      {{build}} 
+      
+	tar -xzvf ../hello-2.1.90.tar.gz 
+	ln -s hello-2.1.90 historic
+	./configure
+	make 
+	mkdir STAGE
+       
+        # actually, DESTDIR should be set by configuration or framework
+
+	make install DESTDIR="$PWD/STAGE"
+
+      {{end-script}}
+      
+    #+end_src    
+
+*** The Markup Syntax
+
+    #+name: package
+    #+begin_src sh
+      set -e
+      set -u
+
+      {{configuration}}
+
+      {{libraries}}
+
+      __close_section(){
+	eval 'section_'"$SECTION"'_end'
+      }
+
+      __run_section(){
+	eval 'run_section_'"$SECTION"
+      }
+
+
+      build_script(){
+
+      SECTION=package; __package(){ # ------------------  PACKAGE DEFINITION
+	  SECTION=package; 
+
+	  section_package_begin
+    #+end_src
+
+    #+name: download
+    #+begin_src sh
+      {{CLOSE-SECTION}}      
+
+      SECTION=download; __download(){ # -----------------  DOWNLOADING
+          SECTION=download; 
+      
+          section_download_begin
+    #+end_src
+
+
+    #+name: build
+    #+begin_src sh
+      {{CLOSE-SECTION}}       
+
+      SECTION=build; __build(){ # ------------------------  BUILDING
+          SECTION=build; 
+      
+          section_build_begin
+    #+end_src
+
+    #+name: end-script
+    #+begin_src sh
+      {{CLOSE-SECTION}}
+
+      }
+      __main "$@"
+    #+end_src
+
+    #+name: CLOSE-SECTION
+    #+begin_src sh      
+          __close_section
+      }
+      __run_section
+    #+end_src
+
+
+*** Libraries
+
+    #+name: libraries
+    #+begin_src sh
+
+      APPNAME=buildscript
+
+      {{utility-library}}      
+      {{build-library}}
+
+      __main(){
+        run_build_script
+      }
+    #+end_src    
+
+***** Building
+
+      #+name: build-library
+      #+begin_src sh
+        
+        # --- BUILD LIBRARY
+
+        build_done(){
+          test -f $LOGFILE && ! test -f $PIDFILE
+        }
+
+        build_in_progress(){
+          test -f $LOGFILE && test -f $PIDFILE
+        }
+        
+        run_build_script(){
+           TIME_NOW="$(date -Is | sed 's|[+].*||')"
+        
+           activate_pass1     # basically fetch package description and log files
+           build_script
+
+           if build_in_progress; then
+              echo "$TIME_NOW: Build in progress ..."
+              echo "   ..."
+              tail "$LOGFILE"
+              echo "   ..."
+              return 0;
+           fi
+
+           if build_done; then
+              echo "Build completed:"
+              echo "   ..."
+              tail "$LOGFILE"
+              echo "----"
+              echo "SUMMARY:"
+              grep '^@@@ ' "$LOGFILE" | sed 's|^@@@ ||'
+              return 0;
+           fi
+
+           touch  "$PIDFILE"
+           touch  "$LOGFILE_FQN"
+           ln -sf "$LOGFILE_FQN" "$LOGFILE"
+
+           ( exec >"$LOGFILE_FQN" 2>&1 
+             echo $$ >"$PIDFILE"
+
+             activate_pass2
+             SOURCE_COUNT=0
+
+             ( build_script 
+
+               BUILD_END_TIME="$(TZ= date -u)"               
+               emit_log "Build end  : $BUILD_END_TIME"
+
+               BUILD_DURATION=$(echo "scale=1;" '(' "$(date -d "$BUILD_END_TIME" +%s)" '-' "$(date -d "$BUILD_START_TIME" +%s)" ')' '/' '60'| bc)
+               
+               emit_log "Duration   : $BUILD_DURATION mins"
+               emit_log "OK."
+
+             )   # isolation against side effects is desired
+
+             rm -f "$PIDFILE"
+
+           ) &
+
+           echo
+           echo "$TIME_NOW: Build $BUILD_ID started."
+        }
+        
+        set_package_info(){
+               
+            if test "$#" -lt 2; then panic "set_package_info: not enough arguments, need >=2, got $#: $*."; fi
+            PACKAGE_NAME="$1"; shift
+            PACKAGE_SOURCE_VERSION="$1"; shift
+            if test "$#" -gt 0; then 
+                PACKAGE_BUILD_VERSION="$1"
+                shift
+            else
+                PACKAGE_BUILD_VERSION="0"
+            fi
+            if test "$#" -gt 0; then panic "set_package_info: trailing arguments: $*."; fi
+            PACKAGE_BUILD_TIME="$(date -Is  | sed 's|[+].*||;s|[:-]||g;s|T|.|')"
+            return 0;
+        }
+        
+        section_package_begin(){
+            set_package_info "$@"
+                
+            BUILD_ID="$PACKAGE_NAME-$PACKAGE_SOURCE_VERSION-$PACKAGE_BUILD_VERSION-$PACKAGE_BUILD_TIME"
+            LOGFILE_FQN="$PACKAGE_NAME-$PACKAGE_SOURCE_VERSION-$PACKAGE_BUILD_VERSION-$PACKAGE_BUILD_TIME".log
+            LOGFILE="$PACKAGE_NAME-$PACKAGE_SOURCE_VERSION-$PACKAGE_BUILD_VERSION".log
+            PIDFILE="$PACKAGE_NAME-$PACKAGE_SOURCE_VERSION-$PACKAGE_BUILD_VERSION".pid
+            
+            # XXX here should be some logic for background handling
+        }
+            
+        section_package_end(){  
+            :
+        }
+
+
+        log_package_info(){  
+            emit_log "Build      : $BUILD_ID"
+            emit_log "Logfile    : $LOGFILE_FQN"   
+            :
+        }
+        
+        
+        download(){
+            local URL="$1"
+            local MD5="$2"
+            local FILE="$(basename $URL)"    
+            
+            echo -n "@@@ Downloading: $FILE ... "
+            if test -a "$FILE"; then
+                echo "already there."
+            else
+                echo "from $URL."
+                wget -c "$URL"
+            fi
+        
+            local MD5_ACTUAL="$(md5sum $FILE | cut -d' ' -f1)"
+            
+            if ! test "$MD5_ACTUAL" == "$MD5"; then
+                panic "$FILE: md5sum differs."
+            fi
+        }
+        
+        unpack(){
+            local FILE="$1"
+            local ARCHIVE_TYPE="$(echo "$FILE" | sed 's/\(\([^.]*\)\|\([.][^a-z][^.]*\)\)*//;s|^[.]||')"
+            local SOURCE_DIR="$(basename "$FILE" ."$ARCHIVE_TYPE")"
+        
+            case "$ARCHIVE_TYPE" in
+        
+                tgz|tar.gz) tar -xzvf "$FILE" ;;
+        
+                ,*) panic "unknown archive type: $ARCHIVE_TYPE.";;
+            esac
+        }
+        
+        section_download_begin(){  
+            URL="$1"
+            MD5="$2"
+            FILE="$(basename $URL)"
+            ARCHIVE_TYPE="$(echo "$FILE" | sed 's/\(\([^.]*\)\|\([.][^a-z][^.]*\)\)*//;s|^[.]||')"
+            SOURCE_COUNT="$(expr "$SOURCE_COUNT" '+' 1)"
+            download "$URL" "$MD5"
+            if test "$SOURCE_COUNT" -eq 1; then
+               SOURCE_DIR="$(basename "$FILE" ."$ARCHIVE_TYPE")"       
+               rm -rf "$SOURCE_DIR"
+               unpack "$FILE"
+            fi
+        }
+                
+        section_download_end(){  
+            if test "$SOURCE_COUNT" -eq 1; then
+                echo "source dir : $SOURCE_DIR"
+            fi
+        }
+        
+        
+              
+        section_build_begin(){
+          BUILD_START_TIME="$(TZ= date -u)"           
+          emit_log "Build start: $BUILD_START_TIME"
+          cd "$SOURCE_DIR"
+        }
+        
+        section_build_end(){ :; }
+        
+        run_section_package(){ :; }
+        run_section_download(){ :; }
+        run_section_build(){ :; }        
+        
+        
+        activate_pass1(){
+            run_section_package(){ __package; }
+            run_section_download(){ :; }
+            run_section_build(){ :; }        
+        }
+
+
+        activate_pass2(){
+            run_section_package(){  log_package_info; }
+            run_section_download(){ __download; }
+            run_section_build(){    __build; }        
+        }
+        
+        
+      #+end_src
+
+
+***** Utilities
+
+      #+name: utility-library
+      #+begin_src sh
+
+        # --- UTILITY LIBRARY
+
+	panic(){
+	  echo "@@@ $APPNAME: $*" >&2; exit 127;
+	}
+
+	warn(){
+	  echo "@@@ $APPNAME: warning: $*" >&2;
+	}
+
+	emit_log(){
+	  echo "@@@ $*" >&2;
+	}
+
+
+	cp_fun(){
+	   eval "$(declare -f "$1" | awk -vNEW="$2" '(NR==1){$1=NEW}{print}')"
+	}
+      #+end_src
+
+
+* Babel/Org/Emacs Setup
+
+# Local Variables:
+# org-babel-noweb-wrap-start: "{{"
+# org-babel-noweb-wrap-end:   "}}"
+# End:
