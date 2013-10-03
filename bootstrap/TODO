@@ -1,0 +1,17 @@
+* -*- mode: org -*- 						     :@SETUP:
+#+STARTUP: showstars
+#+STARTUP: content
+
+
+* Open Points for dot-usr:bootstrap/
+
+- [ ] Should build in scr directory: BUILD_STAGE or something.
+
+- [ ] Scripts should actually go into a babel script, but always
+  untangled before shipping. Should stay simple none-the-less. Complex
+  stuff should go to ./Lib.sh
+
+* ---								     :@SETUP:
+# Local Variables:
+# eval: (progn (org-indent-mode) (visual-line-mode))
+# End:

@@ -1,0 +1,18 @@
+. ./Config.sh
+
+set | grep INSTALL
+
+wget -c http://ftp.gnu.org/gnu/hello/hello-2.8.tar.gz
+
+rm -rf hello-2.8
+tar -xzvf hello-2.8.tar.gz
+cd hello-2.8
+
+./configure --prefix="$INSTALL_PREFIX"
+make
+make install
+
+
+
+
+
