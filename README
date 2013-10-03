@@ -1,0 +1,52 @@
+* -*- mode: org -*-                                                  :@SETUP:
+#+STARTUP: showstars
+#+STARTUP: content
+
+
+* About dot-usr
+
+'dot-usr' is (or will be) a build tree for software packages roughly
+analogous to the BSD port collections, but much simple in
+implementation.
+
+At the moment this collection only serves my personal needs. I'm only
+putting in online because 
+
+  - I need the software at multiple sites 
+  - there is nothing really secret in these scripts
+  - I'm loath the duplicate the effort
+
+ATM ([2013-10-03 Thu]) there is no installation guide ./INSTALL and
+./NOTES is empty: Some time in future, though, you might find more
+information there.
+
+Please note the [[LICENSE (GPL 3)]].
+
+ -- M E Leypold, [2013-10-03 Thu]
+
+* LICENSE (GPL 3)
+
+This is the dot-usr software and build script collection.
+
+Copyright (C) 2013, M E Leypold
+
+This program (scripts, files) is free software: you can redistribute
+it and/or modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+
+
+* ---								     :@SETUP:
+# Local Variables:
+# eval: (progn (org-indent-mode) (visual-line-mode))
+# End:
