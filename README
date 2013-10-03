@@ -6,8 +6,8 @@
 * About dot-usr
 
 'dot-usr' is (or will be) a build tree for software packages roughly
-analogous to the BSD port collections, but much simple in
-implementation.
+analogous to the BSD port collections, but much simpler in
+implementation (but less comfortable in use).
 
 At the moment this collection only serves my personal needs. I'm only
 putting in online because 
@@ -16,7 +16,7 @@ putting in online because
   - there is nothing really secret in these scripts
   - I'm loath the duplicate the effort
 
-ATM ([2013-10-03 Thu]) there is no installation guide ./INSTALL and
+ATM ([2013-10-03 Thu]) there is no installation guide ./INSTALL, and
 ./NOTES is empty: Some time in future, though, you might find more
 information there.
 
