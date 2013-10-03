@@ -1,0 +1,21 @@
+* -*- mode: org -*- 						     :@SETUP:
+#+STARTUP: showstars
+#+STARTUP: content
+
+* Open Points
+
+  - [ ] There should be a setup/configure script
+    - Put default files in installation root (README, Makefile, Profile, link to src).
+    - bootstrap, local etc should be subdirs and git repos.
+    - roots different
+
+  - [ ] Different installs in one system (basically means: Messing
+    with the variable names like DOTUSR_ROOT).
+
+  - [ ] Config.sh and friends should be smart enough to use the
+    profile in env, if there is one or else run/eval dot-usr.profile.
+
+* ---								     :@SETUP:
+# Local Variables:
+# eval: (progn (org-indent-mode) (visual-line-mode))
+# End:

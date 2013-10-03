@@ -38,6 +38,6 @@ begin_profile "$@"
 export_var DOTUSR_ROOT 
 configure_scriptdir "$DOTUSR_ROOT/misc"
 
-# XXX process/pull in sub directories
+# XXX process/pull in sub directories (those just source profile-tools from the path)
 
 end_profile
